@@ -9,13 +9,11 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 0; }
     body { background-color: #ffffff; color: #333333; min-height: 100vh; }
     
-    /* FedEx Top Header */
     .navbar { background: #4D148C; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
     .logo span { color: #FF6600; }
     .nav-title { font-size: 15px; font-weight: 600; }
 
-    /* Search Area */
     .search-section { padding: 20px; max-width: 500px; margin: 0 auto; }
     .search-box { display: flex; gap: 8px; }
     input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; outline: none; text-transform: uppercase; }
@@ -25,7 +23,6 @@
     
     .error-msg { color: #d32f2f; font-size: 14px; font-weight: bold; margin-top: 12px; display: none; text-align: center; }
 
-    /* FedEx Tracking Card Layout */
     .result-container { max-width: 500px; margin: 0 auto; padding: 0 20px 40px; display: none; }
     .sub-brand { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px; }
     
@@ -36,6 +33,11 @@
     .status-location-date { font-size: 13px; color: #444; line-height: 1.4; margin-bottom: 12px; }
     
     .delivery-est { font-size: 14px; color: #222; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
+
+    /* Address Grid */
+    .party-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #e9ecef; }
+    .party-box h4 { font-size: 12px; font-weight: 800; color: #4D148C; text-transform: uppercase; margin-bottom: 6px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    .party-box p { font-size: 12px; color: #444; line-height: 1.4; word-break: break-word; }
 
     /* Timeline */
     .timeline { position: relative; padding-left: 30px; }
@@ -51,7 +53,6 @@
 
     .step-title { font-size: 13px; font-weight: 800; color: #111; text-transform: uppercase; }
     .step-location { font-size: 12px; font-weight: 600; color: #555; margin-top: 2px; text-transform: uppercase; }
-    .step-time { font-size: 11px; color: #777; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -81,6 +82,24 @@
     
     <div class="delivery-est">
       <strong>Estimated Delivery:</strong> <span id="estDate">Pending</span>
+    </div>
+
+    <!-- Sender & Receiver Details Card -->
+    <div class="party-container">
+      <div class="party-box">
+        <h4>From (Sender)</h4>
+        <p><strong id="sName">-</strong></p>
+        <p id="sAddr">-</p>
+        <p id="sEmail">-</p>
+        <p id="sPhone">-</p>
+      </div>
+      <div class="party-box">
+        <h4>To (Receiver)</h4>
+        <p><strong id="rName">-</strong></p>
+        <p id="rAddr">-</p>
+        <p id="rEmail">-</p>
+        <p id="rPhone">-</p>
+      </div>
     </div>
 
     <div class="timeline">
@@ -126,7 +145,6 @@
   <script>
     const SUPABASE_URL = "https://chxfqlopvpijcqhfnpsb.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_TlNgn8wJ6UfQoH24r_wc6A_VQHMb56K";
-
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function trackPackage() {
@@ -156,7 +174,17 @@
         document.getElementById('statusText').innerText = data.status || 'In Transit';
         document.getElementById('currentLocSub').innerText = (data.current_location || 'FedEx Express Hub');
         document.getElementById('estDate').innerText = data.estimated_arrival || 'By end of day';
-        
+
+        document.getElementById('sName').innerText = data.sender_name || 'N/A';
+        document.getElementById('sAddr').innerText = data.sender_address || 'N/A';
+        document.getElementById('sEmail').innerText = data.sender_email || 'N/A';
+        document.getElementById('sPhone').innerText = data.sender_phone || 'N/A';
+
+        document.getElementById('rName').innerText = data.receiver_name || 'N/A';
+        document.getElementById('rAddr').innerText = data.receiver_address || 'N/A';
+        document.getElementById('rEmail').innerText = data.receiver_email || 'N/A';
+        document.getElementById('rPhone').innerText = data.receiver_phone || 'N/A';
+
         document.getElementById('originLoc').innerText = data.origin || 'ORIGIN';
         document.getElementById('pickupLoc').innerText = data.origin || 'ORIGIN';
         document.getElementById('facilityLoc').innerText = data.current_location || 'FEDEX EXPRESS HUB';
