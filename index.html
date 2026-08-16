@@ -6,124 +6,168 @@
   <title>FedEx Tracking</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }
-    body { background-color: #f7f7f7; color: #333; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #ffffff; color: #333333; min-height: 100vh; }
     
-    /* FedEx Header */
-    .navbar { background: #4D148C; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 26px; font-weight: 900; letter-spacing: -1px; }
+    /* FedEx Top Header */
+    .navbar { background: #4D148C; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 24px; font-weight: 900; letter-spacing: -0.5px; }
     .logo span { color: #FF6600; }
-    .sub-title { font-size: 14px; font-weight: bold; }
+    .nav-title { font-size: 15px; font-weight: 600; }
 
-    /* Search Box */
-    .search-container { max-width: 600px; margin: 30px auto 15px; padding: 0 15px; }
+    /* Search Area */
+    .search-section { padding: 20px; max-width: 500px; margin: 0 auto; }
     .search-box { display: flex; gap: 8px; }
-    input { flex: 1; padding: 12px 14px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; outline: none; }
+    input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; outline: none; text-transform: uppercase; }
     input:focus { border-color: #4D148C; }
     button { background: #4D148C; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; }
     button:hover { background: #3b0f6b; }
-    .error-msg { color: #d32f2f; font-size: 14px; font-weight: bold; margin-top: 10px; display: none; }
-
-    /* Tracking Card */
-    .card { max-width: 600px; margin: 15px auto 40px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: none; }
-    .tracking-num { font-size: 12px; color: #666; font-weight: bold; letter-spacing: 0.5px; }
-    .status-title { font-size: 28px; font-weight: 900; color: #4D148C; margin: 6px 0 16px; }
     
-    .meta-info { border-bottom: 1px solid #eee; padding-bottom: 16px; margin-bottom: 24px; line-height: 1.6; font-size: 14px; color: #444; }
-    .meta-info strong { color: #111; }
+    .error-msg { color: #d32f2f; font-size: 14px; font-weight: bold; margin-top: 12px; display: none; text-align: center; }
 
-    /* Vertical Timeline */
-    .timeline { position: relative; padding-left: 28px; }
-    .timeline::before { content: ''; position: absolute; left: 7px; top: 10px; bottom: 10px; width: 2px; background: #ddd; }
-    .timeline-step { position: relative; margin-bottom: 24px; }
+    /* FedEx Tracking Card Layout */
+    .result-container { max-width: 500px; margin: 0 auto; padding: 0 20px 40px; display: none; }
+    .sub-brand { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 20px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px; }
+    
+    .tracking-label { font-size: 11px; font-weight: 700; color: #555; letter-spacing: 0.5px; text-transform: uppercase; }
+    .tracking-number { font-size: 14px; font-weight: bold; color: #111; margin-bottom: 8px; }
+    
+    .status-title { font-size: 28px; font-weight: 900; color: #4D148C; margin-bottom: 8px; }
+    .status-location-date { font-size: 13px; color: #444; line-height: 1.4; margin-bottom: 12px; }
+    
+    .delivery-est { font-size: 14px; color: #222; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
+
+    /* Timeline */
+    .timeline { position: relative; padding-left: 30px; }
+    .timeline-line { position: absolute; left: 7px; top: 8px; bottom: 12px; width: 2px; background-color: #ccc; z-index: 1; }
+    
+    .timeline-step { position: relative; margin-bottom: 24px; z-index: 2; }
     .timeline-step:last-child { margin-bottom: 0; }
     
-    .dot { position: absolute; left: -28px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #ccc; }
-    .timeline-step.active .dot { background: #4D148C; border-color: #4D148C; }
+    .circle { position: absolute; left: -30px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: 2px solid #777; box-sizing: border-box; }
     
-    .step-title { font-weight: bold; font-size: 15px; color: #111; }
-    .step-desc { font-size: 13px; color: #666; margin-top: 3px; }
+    .timeline-step.active .circle { background: #4D148C; border: 2px solid #4D148C; }
+    .timeline-step.completed .circle { background: #ffffff; border: 2px solid #4D148C; }
+
+    .step-title { font-size: 13px; font-weight: 800; color: #111; text-transform: uppercase; }
+    .step-location { font-size: 12px; font-weight: 600; color: #555; margin-top: 2px; text-transform: uppercase; }
+    .step-time { font-size: 11px; color: #777; margin-top: 2px; }
   </style>
 </head>
 <body>
 
   <div class="navbar">
     <div class="logo">Fed<span>Ex</span></div>
-    <div class="sub-title">Tracking</div>
+    <div class="nav-title">Tracking</div>
   </div>
 
-  <div class="search-container">
+  <div class="search-section">
     <div class="search-box">
-      <input type="text" id="trackingInput" placeholder="Enter tracking code (e.g. DLV-1597-I1)">
+      <input type="text" id="trackingInput" placeholder="e.g. DLV-3803-GF">
       <button onclick="trackPackage()">Track</button>
     </div>
     <div id="errorMsg" class="error-msg">Tracking code not found.</div>
   </div>
 
-  <div id="resultCard" class="card">
-    <div class="tracking-num">TRACKING #: <span id="trackCode"></span></div>
+  <div id="resultCard" class="result-container">
+    <div class="sub-brand">FedEx<sup>®</sup> Tracking</div>
+    
+    <div class="tracking-label">TRACKING #: <span id="trackCode" class="tracking-number"></span></div>
     <div id="statusText" class="status-title">In Transit</div>
     
-    <div class="meta-info">
-      <div><strong>Estimated Delivery:</strong> <span id="estDate"></span></div>
-      <div><strong>Destination:</strong> <span id="destination"></span></div>
+    <div id="statusSub" class="status-location-date">
+      <span id="currentLocSub">FedEx Express Hub</span>
+    </div>
+    
+    <div class="delivery-est">
+      <strong>Estimated Delivery:</strong> <span id="estDate">Pending</span>
     </div>
 
     <div class="timeline">
-      <div class="timeline-step active">
-        <div class="dot"></div>
-        <div class="step-title">Departed Facility</div>
-        <div class="step-desc" id="currentLoc"></div>
-      </div>
-      <div class="timeline-step active">
-        <div class="dot"></div>
-        <div class="step-title">Arrived at Origin Facility</div>
-        <div class="step-desc">Sorting Hub</div>
-      </div>
-      <div class="timeline-step active">
-        <div class="dot"></div>
-        <div class="step-title">Package Picked Up</div>
-        <div class="step-desc">Carrier Location</div>
-      </div>
-      <div class="timeline-step active">
-        <div class="dot"></div>
+      <div class="timeline-line"></div>
+      
+      <div class="timeline-step completed">
+        <div class="circle"></div>
         <div class="step-title">Label Created</div>
-        <div class="step-desc">Shipment information sent to FedEx</div>
+        <div class="step-location" id="originLoc">ORIGIN</div>
+      </div>
+
+      <div class="timeline-step completed">
+        <div class="circle"></div>
+        <div class="step-title">Package Picked Up</div>
+        <div class="step-location" id="pickupLoc">ORIGIN</div>
+      </div>
+
+      <div class="timeline-step completed">
+        <div class="circle"></div>
+        <div class="step-title">Arrived at Origin Facility</div>
+        <div class="step-location" id="facilityLoc">FEDEX EXPRESS HUB</div>
+      </div>
+
+      <div class="timeline-step active">
+        <div class="circle"></div>
+        <div class="step-title">Departed Facility</div>
+        <div class="step-location" id="currentLoc">FEDEX EXPRESS HUB</div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="circle"></div>
+        <div class="step-title">OUT FOR DELIVERY</div>
+      </div>
+
+      <div class="timeline-step">
+        <div class="circle"></div>
+        <div class="step-title">TO</div>
+        <div class="step-location" id="destLoc">DESTINATION</div>
       </div>
     </div>
   </div>
 
   <script>
-    const SUPABASE_URL = "YOUR_SUPABASE_URL";
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = "https://chxfqlopvpijcqhfnpsb.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_TlNgn8wJ6UfQoH24r_wc6A_VQHMb56K";
+
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function trackPackage() {
-      const code = document.getElementById('trackingInput').value.trim();
-      const error = document.getElementById('errorMsg');
-      const card = document.getElementById('resultCard');
-      error.style.display = 'none';
-      card.style.display = 'none';
+      const codeInput = document.getElementById('trackingInput').value.trim();
+      const errorEl = document.getElementById('errorMsg');
+      const cardEl = document.getElementById('resultCard');
 
-      if (!code) return;
+      errorEl.style.display = 'none';
+      cardEl.style.display = 'none';
 
-      const { data, error: dbError } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('tracking_code', code)
-        .single();
+      if (!codeInput) return;
 
-      if (dbError || !data) {
-        error.style.display = 'block';
-        return;
+      try {
+        const { data, error } = await db
+          .from('shipments')
+          .select('*')
+          .ilike('tracking_code', codeInput)
+          .single();
+
+        if (error || !data) {
+          errorEl.innerText = "Tracking number not found.";
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        document.getElementById('trackCode').innerText = data.tracking_code;
+        document.getElementById('statusText').innerText = data.status || 'In Transit';
+        document.getElementById('currentLocSub').innerText = (data.current_location || 'FedEx Express Hub');
+        document.getElementById('estDate').innerText = data.estimated_arrival || 'By end of day';
+        
+        document.getElementById('originLoc').innerText = data.origin || 'ORIGIN';
+        document.getElementById('pickupLoc').innerText = data.origin || 'ORIGIN';
+        document.getElementById('facilityLoc').innerText = data.current_location || 'FEDEX EXPRESS HUB';
+        document.getElementById('currentLoc').innerText = data.current_location || 'FEDEX EXPRESS HUB';
+        document.getElementById('destLoc').innerText = data.destination || 'DESTINATION';
+
+        cardEl.style.display = 'block';
+      } catch (err) {
+        errorEl.innerText = "Error fetching tracking details.";
+        errorEl.style.display = 'block';
       }
-
-      document.getElementById('trackCode').innerText = data.tracking_code;
-      document.getElementById('statusText').innerText = data.status || 'In Transit';
-      document.getElementById('currentLoc').innerText = data.current_location || 'Transit Hub';
-      document.getElementById('destination').innerText = data.destination || 'N/A';
-      document.getElementById('estDate').innerText = data.estimated_arrival || 'Pending';
-      card.style.display = 'block';
     }
   </script>
 </body>
