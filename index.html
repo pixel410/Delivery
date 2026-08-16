@@ -3,66 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delivio | Track Your Package</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>FedEx Tracking</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f7f7f7; color: #333; }
+    
+    /* FedEx Header */
+    .navbar { background: #4D148C; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 26px; font-weight: 900; letter-spacing: -1px; }
+    .logo span { color: #FF6600; }
+    .sub-title { font-size: 14px; font-weight: bold; }
+
+    /* Search Box */
+    .search-container { max-width: 600px; margin: 30px auto 15px; padding: 0 15px; }
+    .search-box { display: flex; gap: 8px; }
+    input { flex: 1; padding: 12px 14px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; outline: none; }
+    input:focus { border-color: #4D148C; }
+    button { background: #4D148C; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #3b0f6b; }
+    .error-msg { color: #d32f2f; font-size: 14px; font-weight: bold; margin-top: 10px; display: none; }
+
+    /* Tracking Card */
+    .card { max-width: 600px; margin: 15px auto 40px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: none; }
+    .tracking-num { font-size: 12px; color: #666; font-weight: bold; letter-spacing: 0.5px; }
+    .status-title { font-size: 28px; font-weight: 900; color: #4D148C; margin: 6px 0 16px; }
+    
+    .meta-info { border-bottom: 1px solid #eee; padding-bottom: 16px; margin-bottom: 24px; line-height: 1.6; font-size: 14px; color: #444; }
+    .meta-info strong { color: #111; }
+
+    /* Vertical Timeline */
+    .timeline { position: relative; padding-left: 28px; }
+    .timeline::before { content: ''; position: absolute; left: 7px; top: 10px; bottom: 10px; width: 2px; background: #ddd; }
+    .timeline-step { position: relative; margin-bottom: 24px; }
+    .timeline-step:last-child { margin-bottom: 0; }
+    
+    .dot { position: absolute; left: -28px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #ccc; }
+    .timeline-step.active .dot { background: #4D148C; border-color: #4D148C; }
+    
+    .step-title { font-weight: bold; font-size: 15px; color: #111; }
+    .step-desc { font-size: 13px; color: #666; margin-top: 3px; }
+  </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4">
-  <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
-    <h1 class="text-2xl font-bold text-center mb-2 text-indigo-400">Delivio Tracking</h1>
-    <p class="text-slate-400 text-sm text-center mb-6">Enter your tracking code to see real-time updates.</p>
+<body>
 
-    <div class="flex gap-2 mb-6">
-      <input id="trackingInput" type="text" placeholder="e.g. DLV-8829-QX" 
-             class="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
-      <button onclick="trackPackage()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-medium transition">Track</button>
+  <div class="navbar">
+    <div class="logo">Fed<span>Ex</span></div>
+    <div class="sub-title">Tracking</div>
+  </div>
+
+  <div class="search-container">
+    <div class="search-box">
+      <input type="text" id="trackingInput" placeholder="Enter tracking code (e.g. DLV-1597-I1)">
+      <button onclick="trackPackage()">Track</button>
+    </div>
+    <div id="errorMsg" class="error-msg">Tracking code not found.</div>
+  </div>
+
+  <div id="resultCard" class="card">
+    <div class="tracking-num">TRACKING #: <span id="trackCode"></span></div>
+    <div id="statusText" class="status-title">In Transit</div>
+    
+    <div class="meta-info">
+      <div><strong>Estimated Delivery:</strong> <span id="estDate"></span></div>
+      <div><strong>Destination:</strong> <span id="destination"></span></div>
     </div>
 
-    <div id="result" class="hidden border-t border-slate-800 pt-4 space-y-3">
-      <div class="flex justify-between text-sm">
-        <span class="text-slate-400">Status:</span>
-        <span id="status" class="font-bold text-green-400"></span>
+    <div class="timeline">
+      <div class="timeline-step active">
+        <div class="dot"></div>
+        <div class="step-title">Departed Facility</div>
+        <div class="step-desc" id="currentLoc"></div>
       </div>
-      <div class="flex justify-between text-sm">
-        <span class="text-slate-400">Current Location:</span>
-        <span id="location" class="font-semibold text-indigo-300"></span>
+      <div class="timeline-step active">
+        <div class="dot"></div>
+        <div class="step-title">Arrived at Origin Facility</div>
+        <div class="step-desc">Sorting Hub</div>
       </div>
-      <div class="flex justify-between text-sm">
-        <span class="text-slate-400">Destination:</span>
-        <span id="destination"></span>
+      <div class="timeline-step active">
+        <div class="dot"></div>
+        <div class="step-title">Package Picked Up</div>
+        <div class="step-desc">Carrier Location</div>
       </div>
-      <div class="flex justify-between text-sm">
-        <span class="text-slate-400">Estimated Arrival:</span>
-        <span id="eta"></span>
+      <div class="timeline-step active">
+        <div class="dot"></div>
+        <div class="step-title">Label Created</div>
+        <div class="step-desc">Shipment information sent to FedEx</div>
       </div>
     </div>
-    <div id="error" class="hidden text-red-400 text-sm text-center">Tracking ID not found.</div>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://chxfqlopvpijcqhfnpsb.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_TlNgn8wJ6UfQoH24r_wc6A_VQHMb56K";
-    
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function trackPackage() {
-      const id = document.getElementById('trackingInput').value.trim();
-      const resultDiv = document.getElementById('result');
-      const errorDiv = document.getElementById('error');
-      
-      const { data, error } = await db.from('shipments').select('*').eq('id', id).single();
+      const code = document.getElementById('trackingInput').value.trim();
+      const error = document.getElementById('errorMsg');
+      const card = document.getElementById('resultCard');
+      error.style.display = 'none';
+      card.style.display = 'none';
 
-      if (data) {
-        document.getElementById('status').innerText = data.status;
-        document.getElementById('location').innerText = data.current_location;
-        document.getElementById('destination').innerText = data.destination;
-        document.getElementById('eta').innerText = data.eta;
-        resultDiv.classList.remove('hidden');
-        errorDiv.classList.add('hidden');
-      } else {
-        resultDiv.classList.add('hidden');
-        errorDiv.classList.remove('hidden');
+      if (!code) return;
+
+      const { data, error: dbError } = await supabase
+        .from('shipments')
+        .select('*')
+        .eq('tracking_code', code)
+        .single();
+
+      if (dbError || !data) {
+        error.style.display = 'block';
+        return;
       }
+
+      document.getElementById('trackCode').innerText = data.tracking_code;
+      document.getElementById('statusText').innerText = data.status || 'In Transit';
+      document.getElementById('currentLoc').innerText = data.current_location || 'Transit Hub';
+      document.getElementById('destination').innerText = data.destination || 'N/A';
+      document.getElementById('estDate').innerText = data.estimated_arrival || 'Pending';
+      card.style.display = 'block';
     }
   </script>
 </body>
