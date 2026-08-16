@@ -3,102 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Delivio | Create Tracking Code</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Admin - Shipment Manager</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #0f172a; color: #f8fafc; padding: 20px; min-height: 100vh; }
+    .card { max-width: 500px; margin: 0 auto 24px; background: #1e293b; padding: 24px; border-radius: 12px; border: 1px solid #334155; }
+    h2 { font-size: 18px; margin-bottom: 16px; color: #38bdf8; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin: 10px 0 4px; text-transform: uppercase; font-weight: 600; }
+    input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 14px; outline: none; }
+    button { width: 100%; margin-top: 16px; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .update-btn { background: #059669; }
+    .update-btn:hover { background: #047857; }
+    .msg { margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 13px; text-align: center; display: none; }
+    .success { background: #064e3b; color: #34d399; }
+    .error { background: #7f1d1d; color: #fca5a5; }
+  </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen p-4 flex flex-col items-center">
-  <div class="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl my-6">
-    <h1 class="text-2xl font-bold text-center text-indigo-400 mb-6">Generate Tracking Code</h1>
-    
-    <form id="shipmentForm" class="space-y-4">
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Sender Name</label>
-        <input type="text" id="sender" required placeholder="e.g. Hershey Hal Scott" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-      </div>
+<body>
 
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Receiver Name</label>
-        <input type="text" id="receiver" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-      </div>
+  <!-- CREATE SHIPMENT -->
+  <div class="card">
+    <h2>Create New Shipment</h2>
+    <label>Origin</label>
+    <input type="text" id="origin" placeholder="e.g. Spain">
+    <label>Destination</label>
+    <input type="text" id="destination" placeholder="e.g. Malaysia">
+    <label>Current Location</label>
+    <input type="text" id="current_location" placeholder="e.g. FedEx Hub, Memphis, TN">
+    <label>Status</label>
+    <select id="status">
+      <option value="In Transit">In Transit</option>
+      <option value="Out for Delivery">Out for Delivery</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Exception">Exception</option>
+    </select>
+    <label>Estimated Arrival</label>
+    <input type="text" id="estimated_arrival" placeholder="e.g. Friday, 7/31/2026">
+    <button onclick="createShipment()">Generate Tracking Code</button>
+    <div id="createMsg" class="msg"></div>
+  </div>
 
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Description / Items</label>
-        <input type="text" id="description" required placeholder="e.g. Consignment Box" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Current Location</label>
-        <input type="text" id="location" required placeholder="e.g. Central Hub, London" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1">Delivery Destination Address</label>
-        <input type="text" id="destination" required placeholder="e.g. 45 Providence Estate" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Status</label>
-          <select id="status" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-            <option value="Pending">Pending</option>
-            <option value="In Transit">In Transit</option>
-            <option value="Out for Delivery">Out for Delivery</option>
-            <option value="Delivered">Delivered</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Estimated Delivery</label>
-          <input type="date" id="eta" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white">
-        </div>
-      </div>
-
-      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-lg font-bold transition mt-4">
-        Generate Tracking Code
-      </button>
-    </form>
-
-    <div id="output" class="hidden mt-6 p-4 bg-slate-800 border border-indigo-500/50 rounded-lg text-center">
-      <p class="text-xs text-slate-400 mb-1">Generated Tracking Code:</p>
-      <p id="codeDisplay" class="text-xl font-mono font-bold text-green-400 select-all"></p>
-      <p class="text-xs text-slate-400 mt-2">Send this code to your client to track their order.</p>
-    </div>
+  <!-- UPDATE LOCATION -->
+  <div class="card">
+    <h2>Update Existing Package Location</h2>
+    <label>Tracking Code</label>
+    <input type="text" id="updateCode" placeholder="e.g. DLV-2780-9T">
+    <label>New Current Location</label>
+    <input type="text" id="updateLocation" placeholder="e.g. London Transit Hub">
+    <label>New Status</label>
+    <select id="updateStatus">
+      <option value="In Transit">In Transit</option>
+      <option value="Out for Delivery">Out for Delivery</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Exception">Exception</option>
+    </select>
+    <button class="update-btn" onclick="updateShipment()">Update Location</button>
+    <div id="updateMsg" class="msg"></div>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://chxfqlopvpijcqhfnpsb.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_TlNgn8wJ6UfQoH24r_wc6A_VQHMb56K";
-    
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_URL = "https://chxfqlopvpijcqhfnpsb.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_TlNgn8wJ6UfQoH24r_wc6A_VQHMb56K";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    document.getElementById('shipmentForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    function generateCode() {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let code = "DLV-";
+      for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+      code += "-";
+      for(let i=0; i<2; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+      return code;
+    }
+
+    async function createShipment() {
+      const msg = document.getElementById('createMsg');
+      const tracking_code = generateCode();
       
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const randomLetters = Math.random().toString(36).substring(2, 4).toUpperCase();
-      const trackingCode = `DLV-${randomNum}-${randomLetters}`;
+      const { data, error } = await db.from('shipments').insert([{
+        tracking_code,
+        origin: document.getElementById('origin').value || 'Origin Hub',
+        destination: document.getElementById('destination').value || 'Destination Hub',
+        current_location: document.getElementById('current_location').value || 'FedEx Hub',
+        status: document.getElementById('status').value,
+        estimated_arrival: document.getElementById('estimated_arrival').value || 'Pending'
+      }]);
 
-      const { data, error } = await db.from('shipments').insert([
-        {
-          id: trackingCode,
-          sender_name: document.getElementById('sender').value,
-          receiver_name: document.getElementById('receiver').value,
-          description: document.getElementById('description').value,
-          current_location: document.getElementById('location').value,
-          destination: document.getElementById('destination').value,
-          status: document.getElementById('status').value,
-          eta: document.getElementById('eta').value
-        }
-      ]);
-
-      if (error) {
-        alert("Error saving shipment: " + error.message);
+      if(error) {
+        msg.className = "msg error";
+        msg.innerText = "Error: " + error.message;
       } else {
-        document.getElementById('codeDisplay').innerText = trackingCode;
-        document.getElementById('output').classList.remove('hidden');
-        document.getElementById('shipmentForm').reset();
+        msg.className = "msg success";
+        msg.innerText = "Generated Code: " + tracking_code;
       }
-    });
+      msg.style.display = "block";
+    }
+
+    async function updateShipment() {
+      const msg = document.getElementById('updateMsg');
+      const code = document.getElementById('updateCode').value.trim();
+      const newLoc = document.getElementById('updateLocation').value.trim();
+      const newStatus = document.getElementById('updateStatus').value;
+
+      if(!code || !newLoc) {
+        msg.className = "msg error";
+        msg.innerText = "Please enter both tracking code and new location.";
+        msg.style.display = "block";
+        return;
+      }
+
+      const { data, error } = await db
+        .from('shipments')
+        .update({ current_location: newLoc, status: newStatus })
+        .ilike('tracking_code', code);
+
+      if(error) {
+        msg.className = "msg error";
+        msg.innerText = "Error updating: " + error.message;
+      } else {
+        msg.className = "msg success";
+        msg.innerText = "Updated location for " + code;
+      }
+      msg.style.display = "block";
+    }
   </script>
 </body>
 </html>
