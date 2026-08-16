@@ -10,7 +10,8 @@
     body { background-color: #0f172a; color: #f8fafc; padding: 20px; min-height: 100vh; }
     .card { max-width: 500px; margin: 0 auto 24px; background: #1e293b; padding: 24px; border-radius: 12px; border: 1px solid #334155; }
     h2 { font-size: 18px; margin-bottom: 16px; color: #38bdf8; }
-    label { display: block; font-size: 12px; color: #94a3b8; margin: 10px 0 4px; text-transform: uppercase; font-weight: 600; }
+    h3 { font-size: 14px; margin: 16px 0 8px; color: #f43f5e; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin: 8px 0 4px; text-transform: uppercase; font-weight: 600; }
     input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 14px; outline: none; }
     button { width: 100%; margin-top: 16px; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
     button:hover { background: #1d4ed8; }
@@ -23,13 +24,34 @@
 </head>
 <body>
 
-  <!-- CREATE SHIPMENT -->
   <div class="card">
     <h2>Create New Shipment</h2>
+
+    <h3>Sender Details</h3>
+    <label>Sender Name</label>
+    <input type="text" id="sender_name">
+    <label>Sender Address</label>
+    <input type="text" id="sender_address">
+    <label>Sender Email</label>
+    <input type="email" id="sender_email">
+    <label>Sender Phone</label>
+    <input type="text" id="sender_phone">
+
+    <h3>Receiver Details</h3>
+    <label>Receiver Name</label>
+    <input type="text" id="receiver_name">
+    <label>Receiver Address</label>
+    <input type="text" id="receiver_address">
+    <label>Receiver Email</label>
+    <input type="email" id="receiver_email">
+    <label>Receiver Phone</label>
+    <input type="text" id="receiver_phone">
+
+    <h3>Shipment Details</h3>
     <label>Origin</label>
-    <input type="text" id="origin" placeholder="e.g. Spain">
+    <input type="text" id="origin" placeholder="e.g. Canada">
     <label>Destination</label>
-    <input type="text" id="destination" placeholder="e.g. Malaysia">
+    <input type="text" id="destination" placeholder="e.g. Ohio">
     <label>Current Location</label>
     <input type="text" id="current_location" placeholder="e.g. FedEx Hub, Memphis, TN">
     <label>Status</label>
@@ -41,11 +63,11 @@
     </select>
     <label>Estimated Arrival</label>
     <input type="text" id="estimated_arrival" placeholder="e.g. Friday, 7/31/2026">
+
     <button onclick="createShipment()">Generate Tracking Code</button>
     <div id="createMsg" class="msg"></div>
   </div>
 
-  <!-- UPDATE LOCATION -->
   <div class="card">
     <h2>Update Existing Package Location</h2>
     <label>Tracking Code</label>
@@ -83,6 +105,14 @@
       
       const { data, error } = await db.from('shipments').insert([{
         tracking_code,
+        sender_name: document.getElementById('sender_name').value,
+        sender_address: document.getElementById('sender_address').value,
+        sender_email: document.getElementById('sender_email').value,
+        sender_phone: document.getElementById('sender_phone').value,
+        receiver_name: document.getElementById('receiver_name').value,
+        receiver_address: document.getElementById('receiver_address').value,
+        receiver_email: document.getElementById('receiver_email').value,
+        receiver_phone: document.getElementById('receiver_phone').value,
         origin: document.getElementById('origin').value || 'Origin Hub',
         destination: document.getElementById('destination').value || 'Destination Hub',
         current_location: document.getElementById('current_location').value || 'FedEx Hub',
@@ -108,7 +138,7 @@
 
       if(!code || !newLoc) {
         msg.className = "msg error";
-        msg.innerText = "Please enter both tracking code and new location.";
+        msg.innerText = "Please enter tracking code and new location.";
         msg.style.display = "block";
         return;
       }
