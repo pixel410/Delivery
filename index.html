@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivio | Track Your Package</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <h1 class="text-2xl font-bold text-center mb-2 text-indigo-400">Delivio Tracking</h1>
+    <p class="text-slate-400 text-sm text-center mb-6">Enter your tracking code to see real-time updates.</p>
+
+    <div class="flex gap-2 mb-6">
+      <input id="trackingInput" type="text" placeholder="e.g. DLV-8829-QX" 
+             class="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+      <button onclick="trackPackage()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-medium transition">Track</button>
+    </div>
+
+    <div id="result" class="hidden border-t border-slate-800 pt-4 space-y-3">
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Status:</span>
+        <span id="status" class="font-bold text-green-400"></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Current Location:</span>
+        <span id="location" class="font-semibold text-indigo-300"></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Destination:</span>
+        <span id="destination"></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-slate-400">Estimated Arrival:</span>
+        <span id="eta"></span>
+      </div>
+    </div>
+    <div id="error" class="hidden text-red-400 text-sm text-center">Tracking ID not found.</div>
+  </div>
+
+  <script>
+    async function trackPackage() {
+      const id = document.getElementById('trackingInput').value.trim();
+      const resultDiv = document.getElementById('result');
+      const errorDiv = document.getElementById('error');
+      
+      try {
+        const res = await fetch('./shipments.json?t=' + new Date().getTime());
+        const data = await res.json();
+
+        if (data[id]) {
+          document.getElementById('status').innerText = data[id].status;
+          document.getElementById('location').innerText = data[id].current_location;
+          document.getElementById('destination').innerText = data[id].destination;
+          document.getElementById('eta').innerText = data[id].eta;
+          resultDiv.classList.remove('hidden');
+          errorDiv.classList.add('hidden');
+        } else {
+          resultDiv.classList.add('hidden');
+          errorDiv.classList.remove('hidden');
+        }
+      } catch (e) {
+        alert("Error loading tracking data.");
+      }
+    }
+  </script>
+</body>
+</html>
