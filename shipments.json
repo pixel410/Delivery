@@ -1,0 +1,18 @@
+{
+  "DLV-8829-QX": {
+    "client": "John Doe",
+    "status": "In Transit",
+    "current_location": "Rotterdam Port, Netherlands",
+    "destination": "London, UK",
+    "eta": "Tomorrow 21:00",
+    "last_updated": "2026-08-16 14:00"
+  },
+  "DLV-1042-AB": {
+    "client": "Sarah Smith",
+    "status": "Out for Delivery",
+    "current_location": "Central Hub, NY",
+    "destination": "Brooklyn, NY",
+    "eta": "Today 18:00",
+    "last_updated": "2026-08-16 09:30"
+  }
+}
