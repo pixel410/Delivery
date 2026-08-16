@@ -13,6 +13,7 @@
     h3 { font-size: 14px; margin: 16px 0 8px; color: #f43f5e; border-bottom: 1px solid #334155; padding-bottom: 4px; }
     label { display: block; font-size: 12px; color: #94a3b8; margin: 8px 0 4px; text-transform: uppercase; font-weight: 600; }
     input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 14px; outline: none; }
+    input[type="date"] { color-scheme: dark; }
     button { width: 100%; margin-top: 16px; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
     button:hover { background: #1d4ed8; }
     .update-btn { background: #059669; }
@@ -61,8 +62,8 @@
       <option value="Delivered">Delivered</option>
       <option value="Exception">Exception</option>
     </select>
-    <label>Estimated Arrival</label>
-    <input type="text" id="estimated_arrival" placeholder="e.g. Friday, 7/31/2026">
+    <label>Estimated Arrival Date</label>
+    <input type="date" id="estimated_arrival">
 
     <button onclick="createShipment()">Generate Tracking Code</button>
     <div id="createMsg" class="msg"></div>
@@ -99,9 +100,23 @@
       return code;
     }
 
+    function formatSelectedDate(dateString) {
+      if (!dateString) return 'Pending';
+      const [year, month, day] = dateString.split('-');
+      const dateObj = new Date(year, month - 1, day);
+      return dateObj.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
     async function createShipment() {
       const msg = document.getElementById('createMsg');
       const tracking_code = generateCode();
+      const rawDate = document.getElementById('estimated_arrival').value;
+      const formattedArrival = formatSelectedDate(rawDate);
       
       const { data, error } = await db.from('shipments').insert([{
         tracking_code,
@@ -117,7 +132,7 @@
         destination: document.getElementById('destination').value || 'Destination Hub',
         current_location: document.getElementById('current_location').value || 'FedEx Hub',
         status: document.getElementById('status').value,
-        estimated_arrival: document.getElementById('estimated_arrival').value || 'Pending'
+        estimated_arrival: formattedArrival
       }]);
 
       if(error) {
