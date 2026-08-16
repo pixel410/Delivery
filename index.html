@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delivio | Track Your Package</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4">
   <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
@@ -39,28 +40,28 @@
   </div>
 
   <script>
+    const SUPABASE_URL = "https://chxfqlopvpijcqhfnpsb.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_TlNgn8wJ6UfQoH24r_wc6A_VQHMb56K";
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     async function trackPackage() {
       const id = document.getElementById('trackingInput').value.trim();
       const resultDiv = document.getElementById('result');
       const errorDiv = document.getElementById('error');
       
-      try {
-        const res = await fetch('./shipments.json?t=' + new Date().getTime());
-        const data = await res.json();
+      const { data, error } = await db.from('shipments').select('*').eq('id', id).single();
 
-        if (data[id]) {
-          document.getElementById('status').innerText = data[id].status;
-          document.getElementById('location').innerText = data[id].current_location;
-          document.getElementById('destination').innerText = data[id].destination;
-          document.getElementById('eta').innerText = data[id].eta;
-          resultDiv.classList.remove('hidden');
-          errorDiv.classList.add('hidden');
-        } else {
-          resultDiv.classList.add('hidden');
-          errorDiv.classList.remove('hidden');
-        }
-      } catch (e) {
-        alert("Error loading tracking data.");
+      if (data) {
+        document.getElementById('status').innerText = data.status;
+        document.getElementById('location').innerText = data.current_location;
+        document.getElementById('destination').innerText = data.destination;
+        document.getElementById('eta').innerText = data.eta;
+        resultDiv.classList.remove('hidden');
+        errorDiv.classList.add('hidden');
+      } else {
+        resultDiv.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
       }
     }
   </script>
